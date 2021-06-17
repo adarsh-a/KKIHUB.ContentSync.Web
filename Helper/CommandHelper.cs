@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -39,7 +39,7 @@ namespace KKIHUB.ContentSync.Web.Helper
                 var startInfo = new ProcessStartInfo()
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\"",
+                    Arguments = $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\" {syncId}",
                     UseShellExecute = false,
                     RedirectStandardOutput = true
                 };

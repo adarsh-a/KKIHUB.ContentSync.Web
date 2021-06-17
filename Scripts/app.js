@@ -1,13 +1,13 @@
-﻿function bindSync() {
+function bindSync() {
     let syncButton = document.getElementsByClassName("sync-start")[0];
     if (syncButton) {
         syncButton.addEventListener("click", function () {
-
+            let syncId = syncButton.getAttribute("data-sync-id");
             let sourceHub = document.getElementById("sourcehub-input").value;
             let targetHub = document.getElementById("targethub-input").value;
             let days = document.getElementById("days-input").value;
             var xhttp = new XMLHttpRequest();
-            var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub;
+            var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub + "&syncId=" + syncId;
             //make api call
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("Content-type", "application/json");
@@ -140,6 +140,7 @@ function pushContent() {
 
     let pushSync = document.getElementsByClassName("push-sync")[0];
     if (pushSync) {
+        let syncId = pushSync.getAttribute("data-sync-id");
         pushSync.addEventListener("click", function () {
 
             var checkedValue = [];
@@ -161,7 +162,7 @@ function pushContent() {
             pushParams["targethub"] = targetHub;
 
             var xHttp = new XMLHttpRequest();
-            var url = "/api/content/pushcontent?filepaths=" + itemIds;
+            var url = "/api/content/pushcontent?filepaths=" + itemIds + "&syncId=" + syncId;
             //make api call
             xHttp.open("GET", url, true);;
             xHttp.setRequestHeader("Content-type", "application/json");

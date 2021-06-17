@@ -10,9 +10,9 @@ namespace KKIHUB.ContentSync.Web.Helper
 {
     public static class JsonCreator
     {
-        public static string CreateJsonFile(string name, string type, object details)
+        public static string CreateJsonFile(string syncId, string name, string type, object details)
         {
-            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath);
+            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath, syncId + "/");
             string path = string.Concat(artifactPath, type);
             Directory.CreateDirectory(path);
 
@@ -29,18 +29,18 @@ namespace KKIHUB.ContentSync.Web.Helper
         }
 
 
-        public static List<string> ListContent(string type)
+        public static List<string> ListContent(string syncId, string type)
         {
-            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath);
+            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath, syncId + "/");
             string path = string.Concat(artifactPath, type);
             var directory = Directory.CreateDirectory(path);
 
             return directory.GetFiles().Select(i => i.Name).ToList();
         }
 
-        public static bool Delete(string type, List<string> itemToDelete)
+        public static bool Delete(string syncId, string type, List<string> itemToDelete)
         {
-            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath);
+            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath, syncId + "/");
             string path = string.Concat(artifactPath, type);
 
             foreach (var item in itemToDelete)

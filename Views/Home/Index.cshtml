@@ -1,5 +1,6 @@
 ﻿@{
     ViewBag.Title = "Home Page";
+    var syncId = Guid.NewGuid().ToString();
 }
 
 <div class="jumbotron">
@@ -26,7 +27,7 @@
             </div>
 
             <div class="btnDiv">
-                <input type="button" class="sync-start" id="btnsubmit" value="Sync">
+                <input type="button" class="sync-start" data-sync-id="@syncId" id="btnsubmit" value="Sync">
             </div>
         </div>
         <div class="sync-result">
@@ -34,7 +35,7 @@
 
         </div>
         <div class="button-push hide">
-            <input type="button" class="push-sync" id="btnPush" value="Push Content">
+            <input type="button" class="push-sync" data-sync-id="@syncId" id="btnPush" value="Push Content">
         </div>
     </div>
 </div>

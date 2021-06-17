@@ -1,7 +1,10 @@
 npx wchtools init --url https://content-eu-1.content-cms.com/api/37dd7bf6-5628-4aac-8464-f4894ddfb8c4 --user adarsh.bhautoo@hangarww.com --password Ad1108bh_hangarMU
+Write-Host 
 
-$artifactPath = "$((Get-Location).path)\Artifacts\"
-$assetList = $args[0]
+$syncId = $args[0]
+$assetList = $args[1]
+
+$artifactPath = "$PSScriptRoot\Artifacts\$syncId\"
 
 Function PullAssets{
 param($assetList)

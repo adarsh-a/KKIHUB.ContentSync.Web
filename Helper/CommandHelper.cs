@@ -30,10 +30,9 @@ namespace KKIHUB.ContentSync.Web.Helper
             }
         }
 
-        public static string ExcecuteScriptOutput(string filePath, string syncId)
+        public static string ExcecuteScriptOutput(string filePath, string syncId, string assetList)
         {
             var finalOutputMessage = string.Empty;
-            filePath = Path.Combine(filePath, syncId);
             try
             {
                 var startInfo = new ProcessStartInfo()
@@ -43,11 +42,16 @@ namespace KKIHUB.ContentSync.Web.Helper
                     UseShellExecute = false,
                     RedirectStandardOutput = true
                 };
+
+                startInfo.Arguments = assetList != null
+                  ? $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\" {syncId} {assetList}"
+                  : startInfo.Arguments;
+
                 var process = Process.Start(startInfo);
 
                 while (!process.StandardOutput.EndOfStream)
                 {
-                    finalOutputMessage = process.StandardOutput.ReadLine();
+                    finalOutputMessage += process.StandardOutput.ReadLine() + Environment.NewLine;
                 }
             }
 

@@ -19,9 +19,9 @@ namespace KKIHUB.Content.SyncService.Controllers
 
         [HttpGet]
         [Route("Sync")]
-        public async Task<ActionResult> SyncContentUpdated(string sourceHub)
+        public async Task<ActionResult> SyncContentUpdated(string syncId, string sourceHub)
         {
-            var content = await ContentService.FetchTypeAsync(0, sourceHub, true, false);
+            var content = await ContentService.FetchTypeAsync(syncId, 0, sourceHub, true, false);
 
             return Json(content);
         }

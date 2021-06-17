@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -28,9 +28,9 @@ namespace KKIHUB.ContentSync.Web.Controllers
 
         [HttpGet]
         [Route("SyncComplete")]
-        public async Task<ActionResult> SyncContentAsync(int days, string sourceHub, string targetHub)
+        public async Task<ActionResult> SyncContentAsync(int days, string sourceHub, string targetHub, string syncId)
         {
-            var content = await ContentService.FetchContentAsync(days, sourceHub, false, false);
+            var content = await ContentService.FetchContentAsync(syncId, days, sourceHub, false, false);
 
             return Json(content);
         }
@@ -38,34 +38,34 @@ namespace KKIHUB.ContentSync.Web.Controllers
 
         [HttpGet]
         [Route("SyncRecursive")]
-        public async Task<ActionResult> SyncContentRecursive(int days, string sourceHub, string targetHub)
+        public async Task<ActionResult> SyncContentRecursive(int days, string sourceHub, string targetHub, string syncId)
         {
-            var content = await ContentService.FetchContentAsync(days, sourceHub, true, false);
+            var content = await ContentService.FetchContentAsync(syncId, days, sourceHub, true, false);
 
             return Json(content);
         }
 
         [HttpGet]
-        //[Route("SyncUpdated")]
-        public async Task<JsonResult> SyncContentUpdated(int days, string sourceHub, string targetHub)
+        [Route("SyncUpdated")]
+        public async Task<ActionResult> SyncContentUpdated(int days, string sourceHub, string targetHub, string syncId)
         {
-            var content = await ContentService.FetchContentAsync(days, sourceHub, true, true);
+            var content = await ContentService.FetchContentAsync(syncId, days, sourceHub, true, true);
 
             return Json(content, JsonRequestBehavior.AllowGet);
         }
 
         [HttpGet]
         [Route("ContentByLibrary")]
-        public async Task<ActionResult> ContentByLibrary(string sourceHub, string libraryId)
+        public async Task<ActionResult> ContentByLibrary(string sourceHub, string libraryId, string syncId)
         {
-            var content = await ContentService.FetchContentByLibrary(sourceHub, libraryId);
+            var content = await ContentService.FetchContentByLibrary(syncId, sourceHub, libraryId);
 
             return Json(content);
         }
 
         [HttpGet]
-        //[Route("PushContent")]
-        public JsonResult PushContent(string filepaths)
+        [Route("PushContent")]
+        public JsonResult PushContent(string filepaths, string syncId)
         {
             string message = string.Empty;
             if (!string.IsNullOrEmpty(filepaths))
@@ -80,13 +80,13 @@ namespace KKIHUB.ContentSync.Web.Controllers
                     {
                         var filePath = files.Split('|').ToList();
 
-                        var contentList = JsonCreator.ListContent("content");
+                        var contentList = JsonCreator.ListContent(syncId, "content");
                         if (contentList.Any() && filePath.Any())
                         {
                             var itemsToDelete = contentList.Except(filePath).ToList();
                             if (itemsToDelete.Any())
                             {
-                                var flag = JsonCreator.Delete("content", itemsToDelete);
+                                var flag = JsonCreator.Delete(syncId, "content", itemsToDelete);
                             }
                             //message = CommandHelper.ExcecuteScriptOutput(Path.Combine(Environment.CurrentDirectory, Constants.Constants.Path.WchtoolsPath));
                             var assets = ContentService.FetchAssetsList().ToList();
@@ -99,7 +99,7 @@ namespace KKIHUB.ContentSync.Web.Controllers
 
 
                             assetString = assetString.TrimEnd('|');
-                            CommandHelper.ExcecuteScript(Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.WchtoolsPath), assetString);
+                            message = CommandHelper.ExcecuteScriptOutput(Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.WchtoolsPath), syncId, assetString);
                         }
 
 

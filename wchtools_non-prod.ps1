@@ -32,4 +32,4 @@ if(!$assetList -ne $null)
 
 PushContents
 
-Read-Host "Wait for a key press to exit"
+# Read-Host "Wait for a key press to exit"

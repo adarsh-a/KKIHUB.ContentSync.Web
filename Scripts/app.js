@@ -7,7 +7,7 @@
             let targetHub = document.getElementById("targethub-input").value;
             let days = document.getElementById("days-input").value;
             var xhttp = new XMLHttpRequest();
-            var url = "https://localhost:44380/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub;
+            var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub;
             //make api call
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("Content-type", "application/json");
@@ -18,11 +18,11 @@
                         const data = JSON.parse(this.responseText);
                         data.forEach(function (item) {
 
-                            var itemLibrary = item.libraryName;
-                            var itemName = item.itemName;
-                            var itemId = item.itemId;
-                            var libraryId = item.libraryId;
-                            var fileName = item.filename;
+                            var itemLibrary = item.LibraryName;
+                            var itemName = item.ItemName;
+                            var itemId = item.ItemId;
+                            var libraryId = item.LibraryId;
+                            var fileName = item.Filename;
 
                             CreateElement(itemId, itemLibrary, libraryId, itemName,fileName);
 
@@ -161,7 +161,7 @@ function pushContent() {
             pushParams["targethub"] = targetHub;
 
             var xHttp = new XMLHttpRequest();
-            var url = "https://localhost:44380/api/content/pushcontent?filepaths=" + itemIds;
+            var url = "/api/content/pushcontent?filepaths=" + itemIds;
             //make api call
             xHttp.open("GET", url, true);;
             xHttp.setRequestHeader("Content-type", "application/json");

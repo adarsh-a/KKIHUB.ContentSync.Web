@@ -9,11 +9,11 @@ namespace KKIHUB.ContentSync.Web.Service
 {
     public interface IAcousticService
     {
-        Task<List<ContentModel>> FetchArtifactForDateRangeAsync(int days, string hub, bool recursive, bool onlyUpdated);
+        Task<List<ContentModel>> FetchArtifactForDateRangeAsync(string syncId, int days, string hub, bool recursive, bool onlyUpdated);
 
-        Task<List<string>> FetchTypeAsync(int days, string hub, bool recursive, bool onlyUpdated);
+        Task<List<string>> FetchTypeAsync(string syncId, int days, string hub, bool recursive, bool onlyUpdated);
 
-        Task<List<ContentModel>> FetchContentByLibrary(string hub, string libraryId);
+        Task<List<ContentModel>> FetchContentByLibrary(string syncId, string hub, string libraryId);
 
         List<AssetModel> FetchAssetsList();
     }

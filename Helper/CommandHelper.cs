@@ -6,19 +6,19 @@ namespace KKIHUB.ContentSync.Web.Helper
 {
     public static class CommandHelper
     {
-        public static void ExcecuteScript(string filePath, string assetList)
+        public static void ExcecuteScript(string filePath, string syncId, string assetList)
         {
             try
             {
                 var startInfo = new ProcessStartInfo()
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\"",
+                    Arguments = $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\" {syncId}",
                     UseShellExecute = true
                 };
 
                 startInfo.Arguments = assetList != null
-                   ? $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\" {assetList}"
+                   ? $"-NoProfile -ExecutionPolicy unrestricted -File \"{filePath}\" {syncId} {assetList}"
                    : startInfo.Arguments;
 
                 Process.Start(startInfo);
@@ -30,9 +30,10 @@ namespace KKIHUB.ContentSync.Web.Helper
             }
         }
 
-        public static string ExcecuteScriptOutput(string filePath)
+        public static string ExcecuteScriptOutput(string filePath, string syncId)
         {
             var finalOutputMessage = string.Empty;
+            filePath = Path.Combine(filePath, syncId);
             try
             {
                 var startInfo = new ProcessStartInfo()

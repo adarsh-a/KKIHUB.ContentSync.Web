@@ -1,4 +1,4 @@
-﻿using KKIHUB.ContentSync.Web.Helper;
+using KKIHUB.ContentSync.Web.Helper;
 using KKIHUB.ContentSync.Web.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,7 +21,7 @@ namespace KKIHUB.ContentSync.Web.Service
         private List<string> AssociatedAssetsId = new List<string>();
         private static List<AssetModel> AssetModelList = new List<AssetModel>();
 
-        public async Task<List<ContentModel>> FetchArtifactForDateRangeAsync(int days, string hub, bool recursive, bool onlyUpdated)
+        public async Task<List<ContentModel>> FetchArtifactForDateRangeAsync(string syncId, int days, string hub, bool recursive, bool onlyUpdated)
         {
             ItemsFetched.Add($"Sync Started at {DateTime.Now}");
             if (Constants.Constants.HubNameToId.ContainsKey(hub)
@@ -56,7 +56,7 @@ namespace KKIHUB.ContentSync.Web.Service
                     {
                         if (response != null)
                         {
-                            await ResponseStreamLogicAsync(response, hub, contentIdUrl, hubApi, recursive, startdate, onlyUpdated);
+                            await ResponseStreamLogicAsync(syncId, response, hub, contentIdUrl, hubApi, recursive, startdate, onlyUpdated);
                         }
                     }
                 }
@@ -82,7 +82,7 @@ namespace KKIHUB.ContentSync.Web.Service
             return assetList;
         }
 
-        private async Task FecthContentByIdAsync(string contentIdUrl, List<string> artifactIds, string hubApi, bool recursive, string startDate)
+        private async Task FecthContentByIdAsync(string syncId, string contentIdUrl, List<string> artifactIds, string hubApi, bool recursive, string startDate)
         {
             foreach (var id in artifactIds)
             {
@@ -119,14 +119,14 @@ namespace KKIHUB.ContentSync.Web.Service
 
                                 if (ShouldUpdate(lastModifiedDate, startDate, recursive))
                                 {
-                                    var msg = JsonCreator.CreateJsonFile(itemName, itemClassification, responseAsString);
+                                    var msg = JsonCreator.CreateJsonFile(syncId, itemName, itemClassification, responseAsString);
                                     if (!string.IsNullOrWhiteSpace(msg))
                                     {
                                         ItemsFetched.Add(msg);
                                     }
                                 }
 
-                                await ExtractElementAsyncv2(itemObj, contentIdUrl, hubApi, recursive, startDate);
+                                await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startDate);
 
                             }
                         }
@@ -144,7 +144,7 @@ namespace KKIHUB.ContentSync.Web.Service
         }
 
 
-        public async Task<List<string>> FetchTypeAsync(int days, string hub, bool recursive, bool onlyUpdated)
+        public async Task<List<string>> FetchTypeAsync(string syncId, int days, string hub, bool recursive, bool onlyUpdated)
         {
             ItemsFetched.Add($"Sync Started at {DateTime.Now}");
             int offset = 0;
@@ -178,7 +178,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         {
                             if (response != null)
                             {
-                                itemReturned = await ResponseStreamLogicTypeAsync(response, string.Empty, hubApi, recursive, string.Empty, onlyUpdated, itemReturned, true);
+                                itemReturned = await ResponseStreamLogicTypeAsync(syncId, response, string.Empty, hubApi, recursive, string.Empty, onlyUpdated, itemReturned, true);
                                 offset = offset + itemReturned;
                             }
                         }
@@ -200,7 +200,7 @@ namespace KKIHUB.ContentSync.Web.Service
         }
 
 
-        private async Task ResponseStreamLogicAsync(HttpWebResponse response,
+        private async Task ResponseStreamLogicAsync(string syncId, HttpWebResponse response,
             string hub, string contentIdUrl, string hubApi, bool recursive,
             string startdate, bool onlyUpdated, bool isAsset = false)
         {
@@ -223,7 +223,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         var itemName = $"{itemId}_cmd.json".Replace(":", "_");
 
 
-                        var msg = JsonCreator.CreateJsonFile(itemName, itemClassification, item);
+                        var msg = JsonCreator.CreateJsonFile(syncId, itemName, itemClassification, item);
                         if (!string.IsNullOrWhiteSpace(msg))
                         {
                             ItemsFetched.Add(msg);
@@ -244,7 +244,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         //need to know onlyUpdated is defined
                         if (!isAsset) //&& !onlyUpdated)
                         {
-                            await ExtractElementAsyncv2(itemObj, contentIdUrl, hubApi, recursive, startdate);
+                            await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate);
                             await GetAssetPath(hub);
                         }
                     }
@@ -268,7 +268,7 @@ namespace KKIHUB.ContentSync.Web.Service
             return true;
 
         }
-        private async Task ExtractElementAsync(JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
+        private async Task ExtractElementAsync(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
         {
             var elementString = itemObj["elements"].ToString();
             var itemId = itemObj["id"].ToString();
@@ -296,7 +296,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
             if (associatedId.Any())
             {
-                await FecthContentByIdAsync(contentIdUrl, associatedId, hubApi, recursive, startDate);
+                await FecthContentByIdAsync(syncId, contentIdUrl, associatedId, hubApi, recursive, startDate);
             }
 
         }
@@ -304,7 +304,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
 
 
-        private async Task ExtractElementAsyncv2(JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
+        private async Task ExtractElementAsyncv2(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
         {
             var elementString = itemObj["elements"].ToString();
             List<string> associatedId = new List<string>();
@@ -374,7 +374,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
             if (associatedId.Any())
             {
-                await FecthContentByIdAsync(contentIdUrl, associatedId, hubApi, recursive, startDate);
+                await FecthContentByIdAsync(syncId, contentIdUrl, associatedId, hubApi, recursive, startDate);
             }
 
         }
@@ -409,7 +409,7 @@ namespace KKIHUB.ContentSync.Web.Service
         }
 
 
-        private async Task<int> ResponseStreamLogicTypeAsync(HttpWebResponse response,
+        private async Task<int> ResponseStreamLogicTypeAsync(string syncId, HttpWebResponse response,
            string contentIdUrl, string hubApi, bool recursive,
            string startdate, bool onlyUpdated, int itemCount, bool isAsset = false)
         {
@@ -434,7 +434,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         var itemId = itemObj["name"];
                         var itemName = $"{itemId}.json".Replace(":", "_").Replace(" ", "-");
 
-                        var msg = JsonCreator.CreateJsonFile(itemName, "types", item);
+                        var msg = JsonCreator.CreateJsonFile(syncId, itemName, "types", item);
                         if (!string.IsNullOrWhiteSpace(msg))
                         {
                             ItemsFetched.Add(msg);
@@ -455,7 +455,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         {
                             //await ExtractElementAsync(itemObj, contentIdUrl, hubApi, recursive, startdate);
 
-                            await ExtractElementAsyncv2(itemObj, contentIdUrl, hubApi, recursive, startdate);
+                            await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate);
 
                         }
                     }
@@ -473,7 +473,7 @@ namespace KKIHUB.ContentSync.Web.Service
         }
 
 
-        public async Task<List<ContentModel>> FetchContentByLibrary(string hub, string libraryId)
+        public async Task<List<ContentModel>> FetchContentByLibrary(string syncId, string hub, string libraryId)
         {
             ItemsFetched.Add($"Sync Started at {DateTime.Now}");
             int offset = 0;
@@ -507,7 +507,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         {
                             if (response != null && response.StatusCode == HttpStatusCode.OK)
                             {
-                                itemReturned = ResponseStreamLogicContentAsync(response, itemReturned, libraryId);
+                                itemReturned = ResponseStreamLogicContentAsync(syncId, response, itemReturned, libraryId);
                                 offset = offset + itemReturned;
                             }
                         }
@@ -581,7 +581,7 @@ namespace KKIHUB.ContentSync.Web.Service
             return AssetModelList;
         }
 
-        private int ResponseStreamLogicContentAsync(HttpWebResponse response,
+        private int ResponseStreamLogicContentAsync(string syncId, HttpWebResponse response,
           int itemCount, string libraryId)
         {
 
@@ -616,7 +616,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
                                             var itemName = $"{itemId}_cmd.json".Replace(":", "_sep_").Replace(" ", "-");
 
-                                            var msg = JsonCreator.CreateJsonFile(itemName, itemClassification, item);
+                                            var msg = JsonCreator.CreateJsonFile(syncId, itemName, itemClassification, item);
                                             if (!string.IsNullOrWhiteSpace(msg))
                                             {
                                                 ItemsFetched.Add(msg);

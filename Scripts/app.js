@@ -1,5 +1,6 @@
 function bindSync() {
     let syncButton = document.getElementsByClassName("sync-start")[0];
+    let overlay = document.getElementsByClassName("overlay")[0];
     if (syncButton) {
         syncButton.addEventListener("click", function () {
             let syncId = syncButton.getAttribute("data-sync-id");
@@ -8,6 +9,7 @@ function bindSync() {
             let days = document.getElementById("days-input").value;
             var xhttp = new XMLHttpRequest();
             var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub + "&syncId=" + syncId;
+            overlay.style.display="block";
             //make api call
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("Content-type", "application/json");
@@ -24,7 +26,8 @@ function bindSync() {
                             var libraryId = item.LibraryId;
                             var fileName = item.Filename;
 
-                            CreateElement(itemId, itemLibrary, libraryId, itemName,fileName);
+                            CreateElement(itemId, itemLibrary, libraryId, itemName, fileName);
+                            overlay.style.display = "none";
 
 
                         });
@@ -55,6 +58,7 @@ function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {
         var table = document.createElement("table");
         table.id = libraryId;
         table.classList.add("item-details");
+        table.classList.add("table");
         var tableHead = document.createElement("thead");
 
         var tableRow = document.createElement("tr");
@@ -139,6 +143,7 @@ function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {
 function pushContent() {
 
     let pushSync = document.getElementsByClassName("push-sync")[0];
+    let overlay = document.getElementsByClassName("overlay")[0];
     if (pushSync) {
         let syncId = pushSync.getAttribute("data-sync-id");
         pushSync.addEventListener("click", function () {
@@ -160,7 +165,7 @@ function pushContent() {
             var itemIds = checkedValue.join('|');           
             pushParams["filePaths"] = itemIds;
             pushParams["targethub"] = targetHub;
-
+            overlay.style.display = "block";
             var xHttp = new XMLHttpRequest();
             var url = "/api/content/pushcontent?filepaths=" + itemIds + "&syncId=" + syncId;
             //make api call
@@ -170,7 +175,7 @@ function pushContent() {
                 if (this.readyState == 4 && this.status == 200) {
                     console.log(this.responseText);
                     if (this.responseText) {
-                       
+                        overlay.style.display = "none";
                     }
                 }
             };

@@ -99,7 +99,7 @@ namespace KKIHUB.ContentSync.Web.Controllers
 
 
                             assetString = assetString.TrimEnd('|');
-                            message = CommandHelper.ExcecuteScriptOutput(Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.WchtoolsPath), syncId, assetString);
+                            CommandHelper.ExcecuteScript(Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.WchtoolsPath), syncId, assetString);
                         }
 
 

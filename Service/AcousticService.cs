@@ -82,7 +82,7 @@ namespace KKIHUB.ContentSync.Web.Service
             return assetList;
         }
 
-        private async Task FecthContentByIdAsync(string syncId, string contentIdUrl, List<string> artifactIds, string hubApi, bool recursive, string startDate)
+        private async Task FecthContentByIdAsync(string syncId, string contentIdUrl, List<string> artifactIds, string hubApi, bool recursive, string startDate, string hub)
         {
             foreach (var id in artifactIds)
             {
@@ -123,10 +123,26 @@ namespace KKIHUB.ContentSync.Web.Service
                                     if (!string.IsNullOrWhiteSpace(msg))
                                     {
                                         ItemsFetched.Add(msg);
+                                        var libraryId = itemObj["libraryId"].ToString();
+                                        var name = itemObj["name"].ToString();
+
+                                        var contentModel = new ContentModel
+                                        {
+                                            ItemId = itemId.ToString(),
+                                            ItemName = name,
+                                            LibraryId = libraryId,
+                                            LibraryName = Constants.Constants.LibraryIdMap[libraryId],
+                                            Filename = itemName
+                                        };
+
+                                       
+                                        contentModel.Assets = await ExtractAssetsId(syncId, itemObj, contentIdUrl, hub, recursive, startDate);
+                                        ContentModelList.Add(contentModel);
+                                        await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startDate, hub);
                                     }
                                 }
 
-                                await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startDate);
+
 
                             }
                         }
@@ -178,7 +194,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         {
                             if (response != null)
                             {
-                                itemReturned = await ResponseStreamLogicTypeAsync(syncId, response, string.Empty, hubApi, recursive, string.Empty, onlyUpdated, itemReturned, true);
+                                itemReturned = await ResponseStreamLogicTypeAsync(syncId, response, string.Empty, hubApi, recursive, string.Empty, onlyUpdated, itemReturned, hub, true);
                                 offset = offset + itemReturned;
                             }
                         }
@@ -230,23 +246,26 @@ namespace KKIHUB.ContentSync.Web.Service
 
                             var libraryId = itemObj["libraryId"].ToString();
                             var name = itemObj["name"].ToString();
-                            ContentModelList.Add(new ContentModel
+                            var contentModel = new ContentModel
                             {
                                 ItemId = itemId.ToString(),
                                 ItemName = name,
                                 LibraryId = libraryId,
                                 LibraryName = Constants.Constants.LibraryIdMap[libraryId],
                                 Filename = itemName
-                            });
+                            };
 
+                            if (!isAsset) //&& !onlyUpdated)
+                            {
+                                contentModel.Assets = await ExtractAssetsId(syncId, itemObj, contentIdUrl, hub, recursive, startdate);
+                                ContentModelList.Add(contentModel);
+
+                                await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate, hub);
+                                
+                                //await GetAssetPath(hub);
+                            }
                         }
 
-                        //need to know onlyUpdated is defined
-                        if (!isAsset) //&& !onlyUpdated)
-                        {
-                            await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate);
-                            await GetAssetPath(hub);
-                        }
                     }
                 }
             }
@@ -268,43 +287,9 @@ namespace KKIHUB.ContentSync.Web.Service
             return true;
 
         }
-        private async Task ExtractElementAsync(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
-        {
-            var elementString = itemObj["elements"].ToString();
-            var itemId = itemObj["id"].ToString();
-            List<string> associatedId = new List<string>();
+       
 
-            string[] elements = elementString.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            if (elements != null && elements.Any())
-            {
-                foreach (var element in elements)
-                {
-                    if (element.Contains("\"id\":"))
-                    {
-                        var stringSplit = element.Trim().Split(' ');
-                        if (stringSplit.Length > 1)
-                        {
-                            var id = stringSplit[1].Replace("\"", "");
-                            if (!associatedId.Contains(id) && !string.Equals(itemId, id))
-                            {
-                                associatedId.Add(id);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (associatedId.Any())
-            {
-                await FecthContentByIdAsync(syncId, contentIdUrl, associatedId, hubApi, recursive, startDate);
-            }
-
-        }
-
-
-
-
-        private async Task ExtractElementAsyncv2(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
+        private async Task ExtractElementAsyncv2(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate, string hub)
         {
             var elementString = itemObj["elements"].ToString();
             List<string> associatedId = new List<string>();
@@ -346,8 +331,60 @@ namespace KKIHUB.ContentSync.Web.Service
                         }
                     }
 
-                    else if (elementValue.Contains(" \"elementType\": \"image\"") || elementValue.Contains(" \"elementType\": \"video\""))
+                    //else if (elementValue.Contains(" \"elementType\": \"image\"") || elementValue.Contains(" \"elementType\": \"video\""))
+                    //{
+                    //    string[] elements = elementValue.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                    //    if (elements != null && elements.Any())
+                    //    {
+                    //        for (int i = 0; i < elements.Length; i++)
+                    //        {
+                    //            var ele = elements[i];
+                    //            if (ele.Contains("\"id\":") && CheckPrevious(i, elements))
+                    //            {
+                    //                var stringSplit = ele.Trim().Split(' ');
+                    //                if (stringSplit.Length > 1)
+                    //                {
+                    //                    var id = stringSplit[1].Replace("\"", "");
+                    //                    if (!AssociatedAssetsId.Contains(id) && !string.Equals(itemId, id))
+                    //                    {
+                    //                        AssociatedAssetsId.Add(id);
+                    //                    }
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //}
+                }
+            }
+
+            if (associatedId.Any())
+            {
+                await FecthContentByIdAsync(syncId, contentIdUrl, associatedId, hubApi, recursive, startDate, hub);
+            }
+
+        }
+
+
+        private async Task<List<AssetModel>> ExtractAssetsId(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)
+        {
+            var elementString = itemObj["elements"].ToString();
+            List<string> assetsIds = new List<string>();
+            var itemId = itemObj["id"].ToString();
+
+            if (!elementString.StartsWith("{"))
+            {
+                elementString = string.Concat("{", elementString, "}");
+            }
+
+            var elementList = JsonConvert.DeserializeObject<Dictionary<string, object>>(elementString);
+            if (elementList != null && elementList.Any())
+            {
+                foreach (var element in elementList)
+                {
+                    var elementValue = element.Value.ToString();
+                    if (elementValue.Contains("asset"))
                     {
+                        //find reference
                         string[] elements = elementValue.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                         if (elements != null && elements.Any())
                         {
@@ -360,9 +397,9 @@ namespace KKIHUB.ContentSync.Web.Service
                                     if (stringSplit.Length > 1)
                                     {
                                         var id = stringSplit[1].Replace("\"", "");
-                                        if (!AssociatedAssetsId.Contains(id) && !string.Equals(itemId, id))
+                                        if (!assetsIds.Contains(id) && !string.Equals(itemId, id))
                                         {
-                                            AssociatedAssetsId.Add(id);
+                                            assetsIds.Add(id);
                                         }
                                     }
                                 }
@@ -372,10 +409,11 @@ namespace KKIHUB.ContentSync.Web.Service
                 }
             }
 
-            if (associatedId.Any())
+            if (assetsIds.Any())
             {
-                await FecthContentByIdAsync(syncId, contentIdUrl, associatedId, hubApi, recursive, startDate);
+                return await FetchAssetPathById(assetsIds, hubApi);
             }
+            return new List<AssetModel>();
 
         }
 
@@ -411,7 +449,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
         private async Task<int> ResponseStreamLogicTypeAsync(string syncId, HttpWebResponse response,
            string contentIdUrl, string hubApi, bool recursive,
-           string startdate, bool onlyUpdated, int itemCount, bool isAsset = false)
+           string startdate, bool onlyUpdated, int itemCount, string hub, bool isAsset = false)
         {
 
             var responseStream = response.GetResponseStream();
@@ -455,7 +493,7 @@ namespace KKIHUB.ContentSync.Web.Service
                         {
                             //await ExtractElementAsync(itemObj, contentIdUrl, hubApi, recursive, startdate);
 
-                            await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate);
+                            await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate, hub);
 
                         }
                     }
@@ -579,6 +617,59 @@ namespace KKIHUB.ContentSync.Web.Service
             }
 
             return AssetModelList;
+        }
+
+        public async Task<List<AssetModel>> FetchAssetPathById(List<string> assetIds, string sourceHub)
+        {
+            var assetPath = new List<AssetModel>();
+            foreach (var assetId in assetIds)
+            {
+                if (Constants.Constants.HubNameToId.ContainsKey(sourceHub) &&
+                    Constants.Constants.HubToApi.ContainsKey(sourceHub))
+                {
+
+                    var hubId = Constants.Constants.HubNameToId[sourceHub];
+                    var hubApi = Constants.Constants.HubToApi[sourceHub];
+
+                    try
+                    {
+                        var baseUrl = Constants.Constants.Endpoints.Base.Replace("{hubId}", hubId);
+                        var assetUrl = $"{baseUrl}{Constants.Constants.Endpoints.FetchAssetsById}/{assetId}";
+
+                        var parameters = "fields=path";
+                        assetUrl = $"{assetUrl}?{parameters}";
+
+                        var request = WebRequest.Create(new Uri(assetUrl));
+                        request.Method = "GET";
+
+                        string credidentials = "AcousticAPIKey" + ":" + hubApi;
+                        var authorization = Convert.ToBase64String(Encoding.Default.GetBytes(credidentials));
+                        request.Headers["Authorization"] = "Basic " + authorization;
+
+                        request.ContentType = "application/json";
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                        using (var response = await request.GetResponseAsync() as HttpWebResponse)
+                        {
+                            if (response != null && response.StatusCode == HttpStatusCode.OK)
+                            {
+                                AssetModel asset = new AssetModel
+                                {
+                                    Path = ResponseStreamAssetPath(response)
+                                };
+
+                                assetPath.Add(asset);
+                            }
+                        }
+                    }
+
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Trace.TraceError($"Fetch Content error : {ex.Message}");
+                    }
+                }
+            }
+
+            return assetPath;
         }
 
         private int ResponseStreamLogicContentAsync(string syncId, HttpWebResponse response,

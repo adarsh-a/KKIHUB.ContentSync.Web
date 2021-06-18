@@ -3,6 +3,7 @@ function bindSync() {
     let overlay = document.getElementsByClassName("overlay")[0];
     if (syncButton) {
         syncButton.addEventListener("click", function () {
+            DeleteTable();
             let syncId = syncButton.getAttribute("data-sync-id");
             let sourceHub = document.getElementById("sourcehub-input").value;
             let targetHub = document.getElementById("targethub-input").value;
@@ -27,7 +28,7 @@ function bindSync() {
                             var fileName = item.Filename;
 
                             CreateElement(itemId, itemLibrary, libraryId, itemName, fileName);
-                            overlay.style.display = "none";
+                           
 
 
                         });
@@ -38,6 +39,7 @@ function bindSync() {
                             var pushButton = document.getElementsByClassName("button-push")[0];
                             pushButton.classList.remove("hide");
                         }
+                        overlay.style.display = "none";
                     }
                 }
             };
@@ -47,6 +49,17 @@ function bindSync() {
 
 
 
+}
+
+function DeleteTable()
+{
+    let contentItem = document.getElementById('content-items');
+    if (contentItem!=null)
+    {
+        contentItem.remove();
+    }
+    var pushButton = document.getElementsByClassName("button-push")[0];
+    pushButton.classList.add("hide");
 }
 
 function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {

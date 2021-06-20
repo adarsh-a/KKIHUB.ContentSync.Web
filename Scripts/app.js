@@ -10,7 +10,7 @@ function bindSync() {
             let days = document.getElementById("days-input").value;
             var xhttp = new XMLHttpRequest();
             var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub + "&syncId=" + syncId;
-            overlay.style.display="block";
+            overlay.style.display = "block";
             //make api call
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("Content-type", "application/json");
@@ -26,9 +26,13 @@ function bindSync() {
                             var itemId = item.ItemId;
                             var libraryId = item.LibraryId;
                             var fileName = item.Filename;
+                            var assets = item.Assets;
+
+                            UpdateLocalStorage(fileName, assets);
+
 
                             CreateElement(itemId, itemLibrary, libraryId, itemName, fileName);
-                           
+
 
 
                         });
@@ -51,18 +55,26 @@ function bindSync() {
 
 }
 
-function DeleteTable()
-{
+function UpdateLocalStorage(fileName, assets) {
+    if (assets != null && assets.length > 0) {
+        let assetsPath = ''
+        for (let i = 0; i < assets.length; i++) {
+            assetsPath = assetsPath + '|' + assets[i].Path;
+        }
+        localStorage.setItem(fileName, assetsPath);
+    }
+}
+
+function DeleteTable() {
     let contentItem = document.getElementById('content-items');
-    if (contentItem!=null)
-    {
+    if (contentItem != null) {
         contentItem.remove();
     }
     var pushButton = document.getElementsByClassName("button-push")[0];
     pushButton.classList.add("hide");
 }
 
-function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {
+function CreateElement(itemId, libraryName, libraryId, itemName, fileName) {
     var libraryTable = document.getElementById(libraryId);
     if (!libraryTable) {
         var libraryDiv = document.createElement("div");
@@ -166,16 +178,14 @@ function pushContent() {
             for (var i = 0; inputElements[i]; ++i) {
                 if (inputElements[i].checked) {
                     checkedValue.push(inputElements[i].value);
-                    
+
                 }
             }
 
-            console.log(checkedValue);
-
             let targetHub = document.getElementById("targethub-input").value;
             var pushParams = {};
-            
-            var itemIds = checkedValue.join('|');           
+
+            var itemIds = checkedValue.join('|');
             pushParams["filePaths"] = itemIds;
             pushParams["targethub"] = targetHub;
             overlay.style.display = "block";
@@ -201,8 +211,38 @@ function pushContent() {
 }
 
 
+function pushArtifacts() {
+    let pushSync = document.getElementsByClassName("push-sync")[0];
+    let overlay = document.getElementsByClassName("overlay")[0];
+    if (pushSync) {
+        let syncId = pushSync.getAttribute("data-sync-id");
+        pushSync.addEventListener("click", function () {
+            var pushParams = {};
+            pushParams["items"] = "xyz";
+            var xHttp = new XMLHttpRequest();
+            var url = "/api/content/PushContentV2";
+            xHttp.open("POST", url, true);
+            xHttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    console.log(this.responseText);
+                    if (this.responseText) {
+                        overlay.style.display = "none";
+                    }
+                }
+            };
+            var jsonparams = JSON.stringify(pushParams)
+
+            xHttp.send("pushParams=" + jsonparams);
+
+
+        });
+    }
+}
+
+
 
 window.onload = function () {
     bindSync();
-    pushContent();
+    //pushContent();
+    pushArtifacts();
 }

@@ -16,10 +16,10 @@ namespace KKIHUB.ContentSync.Web.Controllers
     {
         private IContentService ContentService { get; set; }
 
-        public ContentController():this(new ContentService(new AcousticService()))
-		{
+        public ContentController() : this(new ContentService(new AcousticService()))
+        {
 
-		}
+        }
         public ContentController(IContentService contentService)
         {
             this.ContentService = contentService;
@@ -117,6 +117,39 @@ namespace KKIHUB.ContentSync.Web.Controllers
             return Json(message, JsonRequestBehavior.AllowGet);
         }
 
+        [HttpPost]
+        [Route("PushContentv2")]
+        public JsonResult PushContentv2(string pushParams)
+        {
+            var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
+            string initCommand = $"/C npm run dev -- --path test";
+
+            string msg;
+            try
+            {
+                var p = new Process
+                {
+                    StartInfo =
+                     {
+                         FileName = "cmd.exe",
+                         WorkingDirectory = path,
+                         Arguments = initCommand,
+                         UseShellExecute = false,
+                         RedirectStandardOutput = true,
+                         Verb= "runas"
+                    }
+                };
+                p.Start();
+                msg = p.StandardOutput.ReadToEnd();
+            }
+
+            catch (Exception err)
+            {
+                msg = $"{err.Message} at {err.StackTrace}";
+
+            }
+            return Json(msg);
+        }
 
         private void ExecuteCommand()
         {

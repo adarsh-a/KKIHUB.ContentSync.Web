@@ -201,7 +201,7 @@ namespace KKIHUB.ContentSync.Web.Controllers
         public string PushCommand(string targetHub, string syncId, string jobName)
         {
             var targetHubId = Constants.Constants.HubNameToId[targetHub];
-            var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
+            var path = HttpRuntime.AppDomainAppPath;
             string initCommand = $"/C npm run {jobName} -- --syncid {syncId} --hubid {targetHubId}";
             string msg = string.Empty;
             try
@@ -231,7 +231,7 @@ namespace KKIHUB.ContentSync.Web.Controllers
 
         private string PullAssets(string sourceHub, string assetPath, string syncId)
         {
-            var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
+            var path = HttpRuntime.AppDomainAppPath;
             string initCommand = $"/C npm run pullasset -- --path {assetPath}  --syncid {syncId} --hubid {sourceHub}";
             string msg = string.Empty;
             try

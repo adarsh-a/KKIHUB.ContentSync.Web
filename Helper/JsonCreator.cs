@@ -53,5 +53,16 @@ namespace KKIHUB.ContentSync.Web.Helper
             }
             return true;
         }
+
+        public static bool DeleteAll(string syncId)
+        {
+            var artifactPath = Path.Combine(HttpRuntime.AppDomainAppPath, Constants.Constants.Path.ArtifactPath, syncId);
+            if (Directory.Exists(artifactPath))
+            {
+                Directory.Delete(artifactPath);
+            }
+
+            return true;
+        }
     }
 }

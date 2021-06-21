@@ -217,11 +217,39 @@ function pushArtifacts() {
     if (pushSync) {
         let syncId = pushSync.getAttribute("data-sync-id");
         pushSync.addEventListener("click", function () {
+            overlay.style.display = "block";
+            var checkedValue = [];
+            var inputElements = document.getElementsByClassName('item_override');
+            for (var i = 0; inputElements[i]; ++i) {
+                if (inputElements[i].checked) {
+                    //get assets
+                    let contentDetails = {};
+                    contentDetails.item = inputElements[i].value;
+                    let assets = [];
+                    if (window.localStorage.getItem(inputElements[i].value)) {
+                        assets = window.localStorage.getItem(inputElements[i].value).split("|");
+                    }
+                    contentDetails.assets = assets;
+                    checkedValue.push(contentDetails);
+                }
+            }
+
+            window.localStorage.clear();
+
+            let targetHub = document.getElementById("targethub-input").value;
+            let sourceHub = document.getElementById("sourcehub-input").value;
+
             var pushParams = {};
-            pushParams["items"] = "xyz";
+            pushParams["contentDetails"] = checkedValue;
+            pushParams["syncId"] = syncId;            
+            pushParams['sourceHub'] = sourceHub;
+            pushParams['targetHub'] = targetHub;
+
             var xHttp = new XMLHttpRequest();
             var url = "/api/content/PushContentV2";
             xHttp.open("POST", url, true);
+            xHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
             xHttp.onreadystatechange = function () {
                 if (this.readyState == 4 && this.status == 200) {
                     console.log(this.responseText);

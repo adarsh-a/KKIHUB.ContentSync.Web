@@ -181,6 +181,7 @@
     <Compile Include="Models\HubInfo.cs" />
     <Compile Include="Models\SyncModel.cs" />
     <Compile Include="Model\AssetModel.cs" />
+    <Compile Include="Model\ContentDetails.cs" />
     <Compile Include="Model\ContentModel.cs" />
     <Compile Include="Model\PushParams.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

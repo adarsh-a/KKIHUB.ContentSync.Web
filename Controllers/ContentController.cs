@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using KKIHUB.ContentSync.Web.Helper;
+using KKIHUB.ContentSync.Web.Model;
 using KKIHUB.ContentSync.Web.Service;
 using Newtonsoft.Json;
 
@@ -121,10 +123,117 @@ namespace KKIHUB.ContentSync.Web.Controllers
         [Route("PushContentv2")]
         public JsonResult PushContentv2(string pushParams)
         {
-            var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
-            string initCommand = $"/C npm run dev -- --path test";
+            string msg = string.Empty;
+            var pathDynamic = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(pushParams))
+            {
+                PushParams pushData = JsonConvert.DeserializeObject<PushParams>(pushParams);
+                if (pushData != null)
+                {
+                    var hubId = Constants.Constants.HubNameToId[pushData.SourceHub];
+                    var syncId = pushData.SyncId;
+                    if (pushData.ContentDetails != null && pushData.ContentDetails.Any())
+                    {
+                        DeleteUnnecessaryItems(pushData.ContentDetails, syncId);
+                    }
 
-            string msg;
+                    var assetsFiles = pushData.ContentDetails.Select(i => i.Assets).ToList();
+                    if (assetsFiles != null && assetsFiles.Any())
+                    {
+                        foreach (var assetFile in assetsFiles)
+                        {
+                            if (assetFile != null && assetFile.Any())
+                            {
+                                foreach (var asset in assetFile)
+                                {
+                                    if (!string.IsNullOrEmpty(asset))
+                                    {
+                                        var assetMsg = PullAssets(hubId, asset, syncId);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    //push asset
+                    var innerMsg = PushCommand(pushData.TargetHub, syncId, "pushasset");
+
+                    //push content
+                    var innerMsg2 = PushCommand(pushData.TargetHub, syncId, "pushcontent");
+
+                    //DeleteAllFiles(syncId);
+
+                    /*  var targetHub = Constants.Constants.HubNameToId[pushData.TargetHub];
+                      var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
+                      string initCommand = $"/C npm run push -- --syncid {syncId} --hubid {targetHub}";
+
+                      try
+                      {
+                          var p = new Process
+                          {
+                              StartInfo =
+                               {
+                                   FileName = "cmd.exe",
+                                   WorkingDirectory = path,
+                                   Arguments = initCommand,
+                                   UseShellExecute = false,
+                                   RedirectStandardOutput = true,
+                                   Verb= "runas"
+                              }
+                          };
+                          p.Start();
+                          msg = p.StandardOutput.ReadToEnd();
+
+
+                          DeleteAllFiles(syncId);
+                      }
+                      catch (Exception err)
+                      {
+                          msg = $"{err.Message} at {err.StackTrace}";
+
+                      }*/
+                }
+            }
+            return Json(msg);
+        }
+
+
+        public string PushCommand(string targetHub, string syncId, string jobName)
+        {
+            var targetHubId = Constants.Constants.HubNameToId[targetHub];
+            var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
+            string initCommand = $"/C npm run {jobName} -- --syncid {syncId} --hubid {targetHubId}";
+            string msg = string.Empty;
+            try
+            {
+                var p = new Process
+                {
+                    StartInfo =
+                             {
+                                 FileName = "cmd.exe",
+                                 WorkingDirectory = path,
+                                 Arguments = initCommand,
+                                 UseShellExecute = false,
+                                 RedirectStandardOutput = true,
+                                 Verb= "runas"
+                            }
+                };
+                p.Start();
+                msg = p.StandardOutput.ReadToEnd();
+            }
+            catch (Exception err)
+            {
+                msg = $"{err.Message} at {err.StackTrace}";
+
+            }
+            return msg;
+        }
+
+        private string PullAssets(string sourceHub, string assetPath, string syncId)
+        {
+            var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
+            string initCommand = $"/C npm run pullasset -- --path {assetPath}  --syncid {syncId} --hubid {sourceHub}";
+            string msg = string.Empty;
             try
             {
                 var p = new Process
@@ -146,9 +255,28 @@ namespace KKIHUB.ContentSync.Web.Controllers
             catch (Exception err)
             {
                 msg = $"{err.Message} at {err.StackTrace}";
-
             }
-            return Json(msg);
+
+            return msg;
+        }
+
+
+        private void DeleteUnnecessaryItems(List<ContentDetails> contents, string syncId)
+        {
+            var contentList = JsonCreator.ListContent(syncId, "content");
+            var filePaths = contents.Select(i => i.Item).ToList();
+
+            var itemsToDelete = contentList.Except(filePaths).ToList();
+            if (itemsToDelete.Any())
+            {
+                var flag = JsonCreator.Delete(syncId, "content", itemsToDelete);
+            }
+        }
+
+        private void DeleteAllFiles(string syncId)
+        {
+            var flag = JsonCreator.DeleteAll(syncId);
+
         }
 
         private void ExecuteCommand()

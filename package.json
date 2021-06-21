@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "gulp"
+    "dev": "gulp",
+    "pullasset": "gulp pullAssetJob",
+    "pushasset": "gulp pushAssetJob",
+    "pushcontent": "gulp pushContentJob"
   },
   "author": "",
   "license": "ISC",

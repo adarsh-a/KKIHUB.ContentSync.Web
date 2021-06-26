@@ -1,13 +1,22 @@
-﻿function bindSync() {
+function bindSync() {
     let syncButton = document.getElementsByClassName("sync-start")[0];
+    //let overlay = document.getElementsByClassName("overlay")[0];
     if (syncButton) {
         syncButton.addEventListener("click", function () {
-
+            DeleteTable();
+            DeletePushOutput();
+            let syncId = syncButton.getAttribute("data-sync-id");
             let sourceHub = document.getElementById("sourcehub-input").value;
             let targetHub = document.getElementById("targethub-input").value;
+            if (sourceHub == targetHub) { window.alert("Source Hub and Target Hub cannot be the same!"); return; }
+
             let days = document.getElementById("days-input").value;
+            if (days.length == 0) {
+                window.alert("Days should be greater than 0"); return;
+            }
             var xhttp = new XMLHttpRequest();
-            var url = "https://localhost:44380/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub;
+            var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub + "&syncId=" + syncId;
+            ToggleOverlay("Pulling Artifacts from " + sourceHub + " for the last " + days + " day(s)");
             //make api call
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("Content-type", "application/json");
@@ -18,14 +27,16 @@
                         const data = JSON.parse(this.responseText);
                         data.forEach(function (item) {
 
-                            var itemLibrary = item.libraryName;
-                            var itemName = item.itemName;
-                            var itemId = item.itemId;
-                            var libraryId = item.libraryId;
-                            var fileName = item.filename;
+                            var itemLibrary = item.LibraryName;
+                            var itemName = item.ItemName;
+                            var itemId = item.ItemId;
+                            var libraryId = item.LibraryId;
+                            var fileName = item.Filename;
+                            var assets = item.Assets;
 
-                            CreateElement(itemId, itemLibrary, libraryId, itemName,fileName);
+                            UpdateLocalStorage(fileName, assets);
 
+                            CreateElement(itemId, itemLibrary, libraryId, itemName, fileName);
 
                         });
                         var contentItems = document.getElementById("content-items");
@@ -35,6 +46,8 @@
                             var pushButton = document.getElementsByClassName("button-push")[0];
                             pushButton.classList.remove("hide");
                         }
+                        //overlay.style.display = "none";
+                        ToggleOverlay();
                     }
                 }
             };
@@ -46,7 +59,43 @@
 
 }
 
-function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {
+function ToggleOverlay(msg) {
+    let overlay = document.getElementsByClassName("overlay")[0];
+    let overlaymsg = document.getElementsByClassName("overlay-msg-text")[0];
+    let mainContentPage = document.getElementsByClassName("main-content-page")[0];
+
+    if (overlay.style.display == "none") {
+        overlay.style.display = "block";
+        overlaymsg.innerHTML = msg;
+        mainContentPage.classList.add("blurred-background");
+    }
+    else {
+        overlay.style.display = "none";
+        overlaymsg.innerHTML = "";
+        mainContentPage.classList.remove("blurred-background");
+    }
+}
+
+function UpdateLocalStorage(fileName, assets) {
+    if (assets != null && assets.length > 0) {
+        let assetsPath = ''
+        for (let i = 0; i < assets.length; i++) {
+            assetsPath = assetsPath + '|' + assets[i].Path;
+        }
+        localStorage.setItem(fileName, assetsPath);
+    }
+}
+
+function DeleteTable() {
+    let contentItem = document.getElementById('content-items');
+    if (contentItem != null) {
+        contentItem.remove();
+    }
+    var pushButton = document.getElementsByClassName("button-push")[0];
+    pushButton.classList.add("hide");
+}
+
+function CreateElement(itemId, libraryName, libraryId, itemName, fileName) {
     var libraryTable = document.getElementById(libraryId);
     if (!libraryTable) {
         var libraryDiv = document.createElement("div");
@@ -55,6 +104,7 @@ function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {
         var table = document.createElement("table");
         table.id = libraryId;
         table.classList.add("item-details");
+        table.classList.add("table");
         var tableHead = document.createElement("thead");
 
         var tableRow = document.createElement("tr");
@@ -139,7 +189,9 @@ function CreateElement(itemId, libraryName, libraryId, itemName,fileName) {
 function pushContent() {
 
     let pushSync = document.getElementsByClassName("push-sync")[0];
+    let overlay = document.getElementsByClassName("overlay")[0];
     if (pushSync) {
+        let syncId = pushSync.getAttribute("data-sync-id");
         pushSync.addEventListener("click", function () {
 
             var checkedValue = [];
@@ -147,21 +199,19 @@ function pushContent() {
             for (var i = 0; inputElements[i]; ++i) {
                 if (inputElements[i].checked) {
                     checkedValue.push(inputElements[i].value);
-                    
+
                 }
             }
 
-            console.log(checkedValue);
-
             let targetHub = document.getElementById("targethub-input").value;
             var pushParams = {};
-            
-            var itemIds = checkedValue.join('|');           
+
+            var itemIds = checkedValue.join('|');
             pushParams["filePaths"] = itemIds;
             pushParams["targethub"] = targetHub;
-
+            overlay.style.display = "block";
             var xHttp = new XMLHttpRequest();
-            var url = "https://localhost:44380/api/content/pushcontent?filepaths=" + itemIds;
+            var url = "/api/content/pushcontent?filepaths=" + itemIds + "&syncId=" + syncId;
             //make api call
             xHttp.open("GET", url, true);;
             xHttp.setRequestHeader("Content-type", "application/json");
@@ -169,7 +219,7 @@ function pushContent() {
                 if (this.readyState == 4 && this.status == 200) {
                     console.log(this.responseText);
                     if (this.responseText) {
-                       
+                        overlay.style.display = "none";
                     }
                 }
             };
@@ -182,8 +232,119 @@ function pushContent() {
 }
 
 
+function pushArtifacts() {
+    let pushSync = document.getElementsByClassName("push-sync")[0];
+    DeletePushOutput();
+    if (pushSync) {
+        let syncId = pushSync.getAttribute("data-sync-id");
+        pushSync.addEventListener("click", function () {
+            var checkedValue = [];
+            var inputElements = document.getElementsByClassName('item_override');
+            for (var i = 0; inputElements[i]; ++i) {
+                if (inputElements[i].checked) {
+                    //get assets
+                    let contentDetails = {};
+                    contentDetails.item = inputElements[i].value;
+                    let assets = [];
+                    if (window.localStorage.getItem(inputElements[i].value)) {
+                        assets = window.localStorage.getItem(inputElements[i].value).split("|");
+                    }
+                    contentDetails.assets = assets;
+                    checkedValue.push(contentDetails);
+                }
+            }
+            if (checkedValue.length < 1) {
+                window.alert("Please select which item to push");
+                return;
+            }
+            ToggleOverlay("Pushing Artifacts... Please wait!");
+            window.localStorage.clear();
+            let targetHub = document.getElementById("targethub-input").value;
+            let sourceHub = document.getElementById("sourcehub-input").value;
+
+            var pushParams = {};
+            pushParams["contentDetails"] = checkedValue;
+            pushParams["syncId"] = syncId;
+            pushParams['sourceHub'] = sourceHub;
+            pushParams['targetHub'] = targetHub;
+
+            var xHttp = new XMLHttpRequest();
+            var url = "/api/content/PushContentV2";
+            xHttp.open("POST", url, true);
+            xHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xHttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    console.log(this.responseText);
+                    if (this.responseText) {
+                        ToggleOverlay();
+                        const data = JSON.parse(this.responseText);
+                        showPushOutput(data);
+                    }
+                }
+            };
+            var jsonparams = JSON.stringify(pushParams)
+
+            xHttp.send("pushParams=" + jsonparams);
+
+
+        });
+    }
+}
+
+function showPushOutput(output) {
+    DeleteTable();
+    var outputElement = document.createElement("div");
+    outputElement.classList.add("push-output");
+
+    var table = document.createElement("table");
+    table.id = "push-output-res";
+    table.classList.add("table");
+    var tableHead = document.createElement("thead");
+
+    var tableRow = document.createElement("tr");
+
+    var thName = document.createElement("th");
+    let result = document.createTextNode("Response");
+    thName.appendChild(result);
+
+    tableRow.append(thName);
+    tableHead.append(tableRow);
+    table.append(tableHead);
+
+    var tablebody = document.createElement("tbody");
+    table.append(tablebody);
+
+    var resultsContainer = document.getElementsByClassName("sync-result")[0];
+    outputElement.appendChild(table);
+    resultsContainer.appendChild(outputElement);
+
+    if (output.length > 0) {
+        for (let i = 0; i < output.length; i++) {
+            var tBody = document.getElementById("push-output-res").getElementsByTagName("tbody")[0];
+            let responseTextNode = document.createTextNode(output[i]);
+            var thName = document.createElement("td");
+            thName.appendChild(responseTextNode);
+            var newRow = tBody.insertRow();
+            var newCell = newRow.insertCell();
+            newCell.append(thName);
+        }
+    }
+}
+
+function DeletePushOutput() {
+    let contentItem = document.getElementById('push-output-res');
+    if (contentItem != null) {
+        contentItem.remove();
+    }
+}
+
+
+
+
 
 window.onload = function () {
     bindSync();
-    pushContent();
+    //pushContent();
+    pushArtifacts();
 }

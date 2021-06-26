@@ -10,7 +10,13 @@ namespace KKIHUB.ContentSync.Web.Controllers
     {
         public ActionResult Index()
         {
-            return View();
+            var syncModel = new Models.SyncModel();
+            var hubMap = Constants.Constants.HubNameToId;
+            foreach (var hub in hubMap)
+            {
+                syncModel.HubInfo.Add(new Models.HubInfo { HubName = hub.Key, HubId = hub.Value });
+            }
+            return View(syncModel);
         }
 
         public ActionResult About()

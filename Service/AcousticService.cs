@@ -35,10 +35,10 @@ namespace KKIHUB.ContentSync.Web.Service
                     var dateRangeUrl = $"{baseUrl}{ Constants.Constants.Endpoints.FetchContentDateRange}";
                     var contentIdUrl = $"{baseUrl}{ Constants.Constants.Endpoints.FetchContentById}";
 
-                    var startdate = DateTime.UtcNow.AddDays(-days).ToString("o");
+                    var startDate = DateTime.UtcNow.Date.AddDays(-days).ToString("o");
                     var endDate = DateTime.UtcNow.ToString("o");
 
-                    var parameters = $"start={startdate}&end={endDate}&format=sequence";
+                    var parameters = $"start={startDate}&end={endDate}&format=sequence";
                     dateRangeUrl = $"{dateRangeUrl}?{parameters}";
 
                     var request = WebRequest.Create(new Uri(dateRangeUrl));
@@ -56,7 +56,7 @@ namespace KKIHUB.ContentSync.Web.Service
                     {
                         if (response != null)
                         {
-                            await ResponseStreamLogicAsync(syncId, response, hub, contentIdUrl, hubApi, recursive, startdate, onlyUpdated);
+                            await ResponseStreamLogicAsync(syncId, response, hub, contentIdUrl, hubApi, recursive, startDate, onlyUpdated);
                         }
                     }
                 }

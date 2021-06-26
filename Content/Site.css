@@ -138,3 +138,7 @@ d-flex {
     width: 50%;
     padding-left:50px;
 }
+
+.label-chk {
+    margin-right: 5px;
+}

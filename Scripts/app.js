@@ -1,16 +1,22 @@
 function bindSync() {
     let syncButton = document.getElementsByClassName("sync-start")[0];
-    let overlay = document.getElementsByClassName("overlay")[0];
+    //let overlay = document.getElementsByClassName("overlay")[0];
     if (syncButton) {
         syncButton.addEventListener("click", function () {
             DeleteTable();
+            DeletePushOutput();
             let syncId = syncButton.getAttribute("data-sync-id");
             let sourceHub = document.getElementById("sourcehub-input").value;
             let targetHub = document.getElementById("targethub-input").value;
+            if (sourceHub == targetHub) { window.alert("Source Hub and Target Hub cannot be the same!"); return; }
+
             let days = document.getElementById("days-input").value;
+            if (days.length == 0) {
+                window.alert("Days should be greater than 0"); return;
+            }
             var xhttp = new XMLHttpRequest();
             var url = "/api/content/syncupdated?days=" + days + "&sourcehub=" + sourceHub + "&targethub=" + targetHub + "&syncId=" + syncId;
-            overlay.style.display = "block";
+            ToggleOverlay("Pulling Artifacts from " + sourceHub + " for the last " + days + " day(s)");
             //make api call
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("Content-type", "application/json");
@@ -30,10 +36,7 @@ function bindSync() {
 
                             UpdateLocalStorage(fileName, assets);
 
-
                             CreateElement(itemId, itemLibrary, libraryId, itemName, fileName);
-
-
 
                         });
                         var contentItems = document.getElementById("content-items");
@@ -43,7 +46,8 @@ function bindSync() {
                             var pushButton = document.getElementsByClassName("button-push")[0];
                             pushButton.classList.remove("hide");
                         }
-                        overlay.style.display = "none";
+                        //overlay.style.display = "none";
+                        ToggleOverlay();
                     }
                 }
             };
@@ -53,6 +57,23 @@ function bindSync() {
 
 
 
+}
+
+function ToggleOverlay(msg) {
+    let overlay = document.getElementsByClassName("overlay")[0];
+    let overlaymsg = document.getElementsByClassName("overlay-msg-text")[0];
+    let mainContentPage = document.getElementsByClassName("main-content-page")[0];
+
+    if (overlay.style.display == "none") {
+        overlay.style.display = "block";
+        overlaymsg.innerHTML = msg;
+        mainContentPage.classList.add("blurred-background");
+    }
+    else {
+        overlay.style.display = "none";
+        overlaymsg.innerHTML = "";
+        mainContentPage.classList.remove("blurred-background");
+    }
 }
 
 function UpdateLocalStorage(fileName, assets) {
@@ -213,11 +234,10 @@ function pushContent() {
 
 function pushArtifacts() {
     let pushSync = document.getElementsByClassName("push-sync")[0];
-    let overlay = document.getElementsByClassName("overlay")[0];
+    DeletePushOutput();
     if (pushSync) {
         let syncId = pushSync.getAttribute("data-sync-id");
         pushSync.addEventListener("click", function () {
-            overlay.style.display = "block";
             var checkedValue = [];
             var inputElements = document.getElementsByClassName('item_override');
             for (var i = 0; inputElements[i]; ++i) {
@@ -233,15 +253,18 @@ function pushArtifacts() {
                     checkedValue.push(contentDetails);
                 }
             }
-
+            if (checkedValue.length < 1) {
+                window.alert("Please select which item to push");
+                return;
+            }
+            ToggleOverlay("Pushing Artifacts... Please wait!");
             window.localStorage.clear();
-
             let targetHub = document.getElementById("targethub-input").value;
             let sourceHub = document.getElementById("sourcehub-input").value;
 
             var pushParams = {};
             pushParams["contentDetails"] = checkedValue;
-            pushParams["syncId"] = syncId;            
+            pushParams["syncId"] = syncId;
             pushParams['sourceHub'] = sourceHub;
             pushParams['targetHub'] = targetHub;
 
@@ -254,7 +277,9 @@ function pushArtifacts() {
                 if (this.readyState == 4 && this.status == 200) {
                     console.log(this.responseText);
                     if (this.responseText) {
-                        overlay.style.display = "none";
+                        ToggleOverlay();
+                        const data = JSON.parse(this.responseText);
+                        showPushOutput(data);
                     }
                 }
             };
@@ -266,6 +291,55 @@ function pushArtifacts() {
         });
     }
 }
+
+function showPushOutput(output) {
+    DeleteTable();
+    var outputElement = document.createElement("div");
+    outputElement.classList.add("push-output");
+
+    var table = document.createElement("table");
+    table.id = "push-output-res";
+    table.classList.add("table");
+    var tableHead = document.createElement("thead");
+
+    var tableRow = document.createElement("tr");
+
+    var thName = document.createElement("th");
+    let result = document.createTextNode("Response");
+    thName.appendChild(result);
+
+    tableRow.append(thName);
+    tableHead.append(tableRow);
+    table.append(tableHead);
+
+    var tablebody = document.createElement("tbody");
+    table.append(tablebody);
+
+    var resultsContainer = document.getElementsByClassName("sync-result")[0];
+    outputElement.appendChild(table);
+    resultsContainer.appendChild(outputElement);
+
+    if (output.length > 0) {
+        for (let i = 0; i < output.length; i++) {
+            var tBody = document.getElementById("push-output-res").getElementsByTagName("tbody")[0];
+            let responseTextNode = document.createTextNode(output[i]);
+            var thName = document.createElement("td");
+            thName.appendChild(responseTextNode);
+            var newRow = tBody.insertRow();
+            var newCell = newRow.insertCell();
+            newCell.append(thName);
+        }
+    }
+}
+
+function DeletePushOutput() {
+    let contentItem = document.getElementById('push-output-res');
+    if (contentItem != null) {
+        contentItem.remove();
+    }
+}
+
+
 
 
 

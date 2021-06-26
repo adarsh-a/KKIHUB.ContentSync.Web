@@ -18,9 +18,9 @@ async function init() {
 
 async function pullAsset() {
     console.log("Starting assets pull");
-    let assetPath = argv.path;
+    let assetPath = argv.path;   
     let syncId = argv.syncid;
-    let command = 'wchtools pull -a --dir artifacts/' + syncId + ' --path ' + assetPath + ' --user adarsh.bhautoo@hangarww.com --password Ad1108bh_hangarMU';
+    let command = 'wchtools pull -a --dir artifacts/' + syncId + ' --path ' + assetPath + ' --user adarsh.bhautoo@hangarww.com --password Ad1108bh_hangarMU --verbose -I'; 
     //run('wchtools pull -a --dir artifacts --path /dxdam/fd/fda413f5-d9ac-406a-9360-13a626726837/KYO01145_KKI_Med_Comms_Website_Infographic_Modules_1_1388px_4_lo4d.png --user adarsh.bhautoo@hangarww.com --password Ad1108bh_hangarMU').exec();
     run(command).exec();
     console.log("End assets pull");
@@ -29,7 +29,7 @@ async function pullAsset() {
 
 async function pushAssets() {
     let syncId = argv.syncid;
-    let command = 'wchtools push -a -f --dir artifacts/' + syncId + ' -I --password Ad1108bh_hangarMU';
+    let command = 'wchtools push -a -f --dir artifacts/' + syncId + ' -I --password Ad1108bh_hangarMU --verbose';
     run(command).exec();
     return;
 }
@@ -37,7 +37,7 @@ async function pushAssets() {
 
 async function pushContent() {
     let syncId = argv.syncid;
-    let command = 'wchtools push -c -f --dir artifacts/' + syncId + ' -I --password Ad1108bh_hangarMU';
+    let command = 'wchtools push -c -f --dir artifacts/' + syncId + ' -I --password Ad1108bh_hangarMU --verbose';
     run(command).exec();
     return;
 

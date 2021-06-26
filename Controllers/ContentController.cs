@@ -124,6 +124,10 @@ namespace KKIHUB.ContentSync.Web.Controllers
         public JsonResult PushContentv2(string pushParams)
         {
             string msg = string.Empty;
+            List<string> output = new List<string>();
+            var pushAssetFlag = false;
+            var cleanUpAssetFolder = false;
+            var listOfAssetsIds = new List<string>();
             var pathDynamic = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             if (!string.IsNullOrEmpty(pushParams))
             {
@@ -148,61 +152,91 @@ namespace KKIHUB.ContentSync.Web.Controllers
                                 {
                                     if (!string.IsNullOrEmpty(asset))
                                     {
-                                        var assetMsg = PullAssets(hubId, asset, syncId);
+                                        pushAssetFlag = true;
+                                        var assetPath = asset;
+                                        if (asset.Contains(" "))
+                                        {
+                                            var lastIndex = asset.LastIndexOf("/");
+                                            assetPath = asset.Substring(0, lastIndex);
+                                            cleanUpAssetFolder = true;
+                                            var assetId = assetPath.Substring(assetPath.LastIndexOf("/")+1);
+                                            listOfAssetsIds.Add(assetId);
+                                        }
+                                        var assetMsg = PullAssets(hubId, assetPath, syncId);
+                                        msg = msg + " " + assetMsg;
                                     }
                                 }
                             }
                         }
                     }
 
+                    if (cleanUpAssetFolder)
+                    {
+                        DeleteUnnecessaryAssets(listOfAssetsIds, syncId);
+                    }
+
                     //push asset
-                    var innerMsg = PushCommand(pushData.TargetHub, syncId, "pushasset");
+                    if (pushAssetFlag)
+                    {
+                        var innerMsg = PushCommand(pushData.TargetHub, syncId, "pushasset");
+                        output.AddRange(CleanOutput(innerMsg, "= Pushing content assets ="));
+                    }
+
 
                     //push content
                     var innerMsg2 = PushCommand(pushData.TargetHub, syncId, "pushcontent");
+                    output.AddRange(CleanOutput(innerMsg2, "= Pushing content ="));
+
 
                     //DeleteAllFiles(syncId);
-
-                    /*  var targetHub = Constants.Constants.HubNameToId[pushData.TargetHub];
-                      var path = @"C:\inetpub\wwwroot\KKIHUB.ContentSync.Web";
-                      string initCommand = $"/C npm run push -- --syncid {syncId} --hubid {targetHub}";
-
-                      try
-                      {
-                          var p = new Process
-                          {
-                              StartInfo =
-                               {
-                                   FileName = "cmd.exe",
-                                   WorkingDirectory = path,
-                                   Arguments = initCommand,
-                                   UseShellExecute = false,
-                                   RedirectStandardOutput = true,
-                                   Verb= "runas"
-                              }
-                          };
-                          p.Start();
-                          msg = p.StandardOutput.ReadToEnd();
-
-
-                          DeleteAllFiles(syncId);
-                      }
-                      catch (Exception err)
-                      {
-                          msg = $"{err.Message} at {err.StackTrace}";
-
-                      }*/
                 }
             }
-            return Json(msg);
+            return Json(output);
         }
 
 
-        public string PushCommand(string targetHub, string syncId, string jobName)
+
+        private List<string> CleanOutput(List<string> list, string type)
+        {
+            List<string> outputMsg = new List<string>();
+            var index = 0;
+            if (list.Any())
+            {
+                foreach (var entry in list)
+                {
+                    if (entry.Contains(type))
+                    {
+                        index = list.IndexOf(entry);
+                        break;
+                    }
+                }
+
+                if (index > 0)
+                {
+                    var length = list.Count();
+
+                    while (index < length)
+                    {
+                        var strOut = list[index];
+                        outputMsg.Add(strOut);
+                        index++;
+
+                        if (strOut.StartsWith("Push complete") || strOut.StartsWith("No items to be pushed"))
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            return outputMsg;
+        }
+
+        public List<string> PushCommand(string targetHub, string syncId, string jobName)
         {
             var targetHubId = Constants.Constants.HubNameToId[targetHub];
             var path = HttpRuntime.AppDomainAppPath;
             string initCommand = $"/C npm run {jobName} -- --syncid {syncId} --hubid {targetHubId}";
+            List<string> output = new List<string>();
             string msg = string.Empty;
             try
             {
@@ -219,20 +253,24 @@ namespace KKIHUB.ContentSync.Web.Controllers
                             }
                 };
                 p.Start();
-                msg = p.StandardOutput.ReadToEnd();
+                while (!p.StandardOutput.EndOfStream)
+                {
+                    output.Add(p.StandardOutput.ReadLine());
+                }
+                //msg = p.StandardOutput.ReadToEnd();
             }
             catch (Exception err)
             {
                 msg = $"{err.Message} at {err.StackTrace}";
-
+                output.Add(msg);
             }
-            return msg;
+            return output;
         }
 
         private string PullAssets(string sourceHub, string assetPath, string syncId)
         {
             var path = HttpRuntime.AppDomainAppPath;
-            string initCommand = $"/C npm run pullasset -- --path {assetPath}  --syncid {syncId} --hubid {sourceHub}";
+            string initCommand = $"/C npm run pullasset -- --path \"{assetPath}\"  --syncid {syncId} --hubid {sourceHub}";
             string msg = string.Empty;
             try
             {
@@ -271,6 +309,27 @@ namespace KKIHUB.ContentSync.Web.Controllers
             {
                 var flag = JsonCreator.Delete(syncId, "content", itemsToDelete);
             }
+        }
+
+
+        private void DeleteUnnecessaryAssets(List<string> contents, string syncId)
+        {
+            var assetFolders = JsonCreator.ListDirectories(syncId, "assets/dxdam");
+            if (assetFolders != null)
+            {
+                //aa
+                foreach (var directory in assetFolders)
+                {
+                    //aaflkn-dfsf
+                    var innerAssetFolders = JsonCreator.ListDirectories(syncId, "assets/dxdam/" + directory);
+                    var foldersToDelete = innerAssetFolders.Except(contents).ToList();
+                    if (foldersToDelete.Any())
+                    {
+                        JsonCreator.DeleteFolder(syncId, "assets", foldersToDelete);
+                    }
+                }
+            }
+
         }
 
         private void DeleteAllFiles(string syncId)

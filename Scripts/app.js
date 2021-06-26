@@ -40,7 +40,7 @@ function bindSync() {
 
                         });
                         var contentItems = document.getElementById("content-items");
-
+                        
                         if (contentItems) {
 
                             var pushButton = document.getElementsByClassName("button-push")[0];
@@ -48,11 +48,16 @@ function bindSync() {
                         }
                         //overlay.style.display = "none";
                         ToggleOverlay();
+                        updateAllCheckbox();
                     }
                 }
             };
             xhttp.send();
+
+           
         });
+
+        
     }
 
 
@@ -125,7 +130,23 @@ function CreateElement(itemId, libraryName, libraryId, itemName, fileName) {
         var thOveride = document.createElement("th");
         let overrideTh = document.createTextNode("Override");
 
-        thOveride.appendChild(overrideTh);
+        let divContainer = document.createElement("div");
+        let overrideAll = document.createElement("input");
+        overrideAll.type = "checkbox";
+        overrideAll.id = "override-all_" + libraryId;
+        overrideAll.value = libraryId;
+        overrideAll.classList.add("override-all-chk");
+        overrideAll.innerText = "Override All";
+        var label = document.createElement('label')
+        label.htmlFor = "override-all_" + libraryId;
+        label.appendChild(document.createTextNode('Override All'));
+        label.classList.add("label-chk");
+
+        divContainer.appendChild(label);
+        divContainer.appendChild(overrideAll);
+
+        //thOveride.appendChild(overrideTh);
+        thOveride.appendChild(divContainer);
 
         tableRow.append(thName);
         tableRow.append(thItemId);
@@ -183,8 +204,32 @@ function CreateElement(itemId, libraryName, libraryId, itemName, fileName) {
         newCell4.append(thOveride);
     }
 
+   
+
 }
 
+
+function updateAllCheckbox() {
+    var checkboxes = document.getElementsByClassName("override-all-chk");
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].addEventListener("click", function () {
+            var table = document.getElementById(this.value);
+            var checkboxesInTable = table.getElementsByClassName("item_override");
+
+            if (this.checked) {
+                for (var j = 0; j < checkboxesInTable.length; j++) {
+                    checkboxesInTable[j].checked = true;
+                }
+            }
+            else {
+                for (var k = 0; k < checkboxesInTable.length; k++) {
+                    checkboxesInTable[k].checked = false;
+                }
+            }
+
+        });
+    }
+}
 
 function pushContent() {
 
@@ -240,7 +285,7 @@ function pushArtifacts() {
         pushSync.addEventListener("click", function () {
             var checkedValue = [];
             var inputElements = document.getElementsByClassName('item_override');
-            for (var i = 0; inputElements[i]; ++i) {
+            for (var i = 0; i < inputElements.length; i++) {
                 if (inputElements[i].checked) {
                     //get assets
                     let contentDetails = {};

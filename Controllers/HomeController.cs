@@ -6,10 +6,12 @@ using System.Web.Mvc;
 
 namespace KKIHUB.ContentSync.Web.Controllers
 {
+    using KKIHUB.ContentSync.Web.Constants;
     public class HomeController : Controller
     {
         public ActionResult Index()
         {
+            ViewBag.Libraries = Constants.LibraryIdMap;
             return View();
         }
 

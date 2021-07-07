@@ -1,40 +1,54 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
+	ViewBag.Title = "Home Page";
 }
 
 <div class="jumbotron">
-    <h1>Content Sync Service</h1>
-    <p class="lead">Start your content sync between your Acoustic Hub.</p>
+	<h1>Content Sync Service</h1>
+	<p class="lead">Start your content sync between your Acoustic Hub.</p>
 </div>
 
 <div class="row">
-    <div class="text-center">
-        <h1 class="display-4">Welcome</h1>
-        <p>Start your content sync between your Acoustic Hub.</p>
-        <div class="content-pull-form">
-            <div class="field">
-                <label for="SourceHub" class="ff-label" id="source-hub">SourceHub</label>
-                <input type="text" id="sourcehub-input" class="field-source-hub" placeholder="" aria-placeholder="" name="source-hub-field">
-            </div>
-            <div class="field">
-                <label for="TargetHub" class="ff-label" id="source-hub">TargetHub</label>
-                <input type="text" id="targethub-input" class="field-target-hub" placeholder="" aria-placeholder="" name="target-hub-field">
-            </div>
-            <div class="field">
-                <label for="Days" class="ff-label" id="source-hub">No. of Days</label>
-                <input type="number" id="days-input" placeholder="" class="field-days" aria-placeholder="" name="days-field">
-            </div>
+	<div class="text-center">
+		<h1 class="display-4">Welcome</h1>
+		<p>Start your content sync between your Acoustic Hub.</p>
+		<div class="content-pull-form">
+			<div class="field">
+				<label for="SourceHub" class="ff-label" id="source-hub">SourceHub</label>
+				<input type="text" id="sourcehub-input" class="field-source-hub" placeholder="" aria-placeholder="" name="source-hub-field">
+			</div>
+			<div class="field">
+				<label for="TargetHub" class="ff-label" id="target-hub">TargetHub</label>
+				<input type="text" id="targethub-input" class="field-target-hub" placeholder="" aria-placeholder="" name="target-hub-field">
+			</div>
+			<div class="field">
+				<label for="Library" class="ff-label" id="library">Library</label>
+				<select type="text" id="library-input" class="field-library" placeholder="" aria-placeholder="" name="library-field">
+					<option value="" selected>All</option>
 
-            <div class="btnDiv">
-                <input type="button" class="sync-start" id="btnsubmit" value="Sync">
-            </div>
-        </div>
-        <div class="sync-result">
+					@foreach (KeyValuePair<string, string> library in ViewBag.Libraries)
+					{
+						<option value="@library.Key">@library.Value</option>
+					}
+				</select>
+			</div>
+			<div class="field">
+				<label for="Days" class="ff-label" id="source-hub">From</label>
+				<input type="date" data-date-format="dd/mm/yyyy" id="date-from">
+				<input type="hidden" id="days-input" placeholder="" class="field-days" aria-placeholder="" name="days-field">
+
+			</div>
+
+			<div class="btnDiv">
+				<input type="button" class="sync-start" id="btnsubmit" value="View Changes" />
+				<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+			</div>
+		</div>
+		<div class="sync-result">
 
 
-        </div>
-        <div class="button-push hide">
-            <input type="button" class="push-sync" id="btnPush" value="Push Content">
-        </div>
-    </div>
+		</div>
+		<div class="button-push hide">
+			<input type="button" class="push-sync" id="btnPush" value="Push Content">
+		</div>
+	</div>
 </div>

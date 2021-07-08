@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 
 namespace KKIHUB.ContentSync.Web.Controllers
 {
@@ -12,6 +8,7 @@ namespace KKIHUB.ContentSync.Web.Controllers
         {
             var syncModel = new Models.SyncModel();
             var hubMap = Constants.Constants.HubNameToId;
+            ViewBag.Libraries = Constants.Constants.LibraryIdMap;
             foreach (var hub in hubMap)
             {
                 syncModel.HubInfo.Add(new Models.HubInfo { HubName = hub.Key, HubId = hub.Value });

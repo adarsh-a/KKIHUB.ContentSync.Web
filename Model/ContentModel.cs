@@ -10,5 +10,20 @@ namespace KKIHUB.ContentSync.Web.Model
         public string LibraryName { get; set; }
         public string Filename { get; set; }
         public List<AssetModel> Assets { get; set; }
+
+        /// <summary>
+        /// Defines the modified date
+        /// </summary>
+        public string ModifiedDate { get; set; }
+
+        /// <summary>
+        /// Defines the item name from target hub
+        /// </summary>
+        public string TargetHubItemName { get; set; }
+
+        /// <summary>
+        /// Defines modified date from target hub
+        /// </summary>
+        public string TargetHubModifiedDate { get; set; }
     }
 }

@@ -30,8 +30,9 @@ namespace KKIHUB.ContentSync.Web.Service
 						continue;
 					}
 					artifact.TargetHubItemName = targetItem.ItemName;
-					artifact.TargetHubModifiedDate = targetItem.ModifiedDate;
-				}
+                    artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
+
+                }
 				return artifacts;
 			}
 			catch (Exception ex)
@@ -122,8 +123,9 @@ namespace KKIHUB.ContentSync.Web.Service
 						continue;
 					}
 					artifact.TargetHubItemName = targetItem.ItemName;
-					artifact.TargetHubModifiedDate = targetItem.ModifiedDate;
-				}
+                    artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
+
+                }
 				return artifacts;
 			}
 			catch (Exception ex)

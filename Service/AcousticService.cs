@@ -198,7 +198,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
                                         contentModel.Assets = await ExtractAssetsId(syncId, itemObj, contentIdUrl, hub, recursive, startDate);
                                         ContentModelList.Add(contentModel);
-                                        await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startDate, hub);
+                                        contentModel.ReferencedItemIds = await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startDate, hub);
                                     }
                                 }
 
@@ -325,7 +325,7 @@ namespace KKIHUB.ContentSync.Web.Service
                                     contentModel.Assets = await ExtractAssetsId(syncId, itemObj, contentIdUrl, hub, recursive, startdate);
                                     ContentModelList.Add(contentModel);
 
-                                    await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate, hub);
+                                    contentModel.ReferencedItemIds = await ExtractElementAsyncv2(syncId, itemObj, contentIdUrl, hubApi, recursive, startdate, hub);
 
                                     //await GetAssetPath(hub);
                                 }
@@ -355,7 +355,7 @@ namespace KKIHUB.ContentSync.Web.Service
 
         }
 
-        private async Task ExtractElementAsyncv2(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate, string hub)
+        private async Task<List<string>> ExtractElementAsyncv2(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate, string hub)
         {
             var elementString = itemObj["elements"].ToString();
             List<string> associatedId = new List<string>();
@@ -427,7 +427,7 @@ namespace KKIHUB.ContentSync.Web.Service
             {
                 await FecthContentByIdAsync(syncId, contentIdUrl, associatedId, hubApi, recursive, startDate, hub);
             }
-
+            return associatedId;
         }
 
         private async Task<List<AssetModel>> ExtractAssetsId(string syncId, JsonObject itemObj, string contentIdUrl, string hubApi, bool recursive, string startDate)

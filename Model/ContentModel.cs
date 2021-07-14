@@ -11,6 +11,8 @@ namespace KKIHUB.ContentSync.Web.Model
         public string Filename { get; set; }
         public List<AssetModel> Assets { get; set; }
 
+        public List<string> ReferencedItemIds { get; set; } = new List<string>();
+
         /// <summary>
         /// Defines the modified date
         /// </summary>

@@ -142,3 +142,12 @@ d-flex {
 .label-chk {
     margin-right: 5px;
 }
+
+tr
+{
+    text-align:left;
+}
+
+.inner-child {
+    padding-left: 30px !important;
+}

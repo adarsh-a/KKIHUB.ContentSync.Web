@@ -25,7 +25,7 @@ namespace KKIHUB.ContentSync.Web.Helper
                 Console.WriteLine(msg);
                 return msg;
             }
-            return string.Empty;
+            return $"Item with Id {name} exist";
         }
 
 

@@ -57,6 +57,8 @@ function bindSync() {
                                 renderedId.push(itemId);
                             }
 
+                            console.log('Item with id ' + itemId + 'has reference to ' + associatedItems);
+
 
                         });
                         var contentItems = document.getElementsByClassName("content-items");

@@ -18,7 +18,7 @@ function bindSync() {
 			/*
 			let days = document.getElementById("days-input").value;
 			if (days.length == 0) {
-				window.alert("Days should be greater than 0"); return;
+				window.alert("Days should be greater than 0"); return; 
 			}*/
 			var xhttp = new XMLHttpRequest();
 			var url = "/api/content/syncupdated?startDate=" + date + "&endDate=" + date2 + "&sourcehub=" + sourceHub + "&targethub=" + targetHub + "&syncId=" + syncId + "&library=" + library;
@@ -38,9 +38,9 @@ function bindSync() {
 							var itemId = item.ItemId;
 							var libraryId = item.LibraryId;
 							var fileName = item.Filename;
-							var modifiedDate = item.ModifiedDate;
+							var modifiedDate = new Date(item.ModifiedDate).toLocaleString();
 							var targetHubItemName = item.TargetHubItemName;
-							var targetHubModifiedDate = item.TargetHubModifiedDate;
+							var targetHubModifiedDate = new Date(item.TargetHubModifiedDate).toLocaleString();
 							var assets = item.Assets;
 
 							UpdateLocalStorage(fileName, assets);
@@ -195,9 +195,9 @@ function CreateElement(itemId, libraryName, libraryId, itemName, fileName, modif
 		let modifiedDateEle = document.createTextNode(modifiedDate);
 		let ItemNameEle = document.createTextNode(itemName);
 		let existText = ""
-		if (targetItemName != null  && targetModifiedDate != null) {
+		if (targetItemName != null && targetModifiedDate != null) {
 			existText = "Yes<br/>Item Name:" + targetItemName + "<br/>Modified Date:" + targetModifiedDate;
-		}else {
+		} else {
 			existText = "No"
 		}
 		//let existEle = document.createTextNode(existText);
@@ -420,12 +420,40 @@ function DeletePushOutput() {
 	}
 }
 
+function InitDatePickerMax() {
+	var dateElements = document.querySelectorAll('input[type=date]');
+	var dateNow = new Date();
+	var month = (dateNow.getMonth() + 1) + "";
+	month = month.length > 1 ? month : "0" + month;
+	var day = dateNow.getDate().toString();
+	day = day.length > 1 ? day : "0" + day;
+	dateElements.forEach(function (dateElement) {
+		dateElement.setAttribute("max", dateNow.toISOString().slice(0, 10));
+		
+	});
+}
 
+function SetDateBoundary() {
+	const dateFromElement = document.getElementById('date-from');
+	const dateToElement = document.getElementById('date-to');
 
+	dateFromElement.addEventListener('change', (event) => {
+		dateToElement.setAttribute("min", dateFromElement.value);
+		/*var format = dateFromElement.getAttribute("data-date-format");
+		dateFromElement.setAttribute("data-date", moment(dateFromElement.value, "YYYY-MM-DD").format(format));*/
+	});
+
+	dateToElement.addEventListener('change', (event) => {
+		dateFromElement.setAttribute("max", dateToElement.value);
+	});
+}
 
 
 window.onload = function () {
 	bindSync();
 	//pushContent();
 	pushArtifacts();
+	InitDatePickerMax();
+	SetDateBoundary();
+
 }

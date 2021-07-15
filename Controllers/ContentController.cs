@@ -63,10 +63,36 @@ namespace KKIHUB.ContentSync.Web.Controllers
                 content = await ContentService.FetchModifiedContentByLibrary(fetchModel);
             }
 
-            var itemsHavingReferences = content.Where(i => i.ReferencedItemIds.Count > 0);
-            var remainingItems = content.Except(itemsHavingReferences);
+            var idsList = new List<string>();
+            foreach (var item in content)
+            {
+                if (item.ReferencedItemIds.Count() > 0)
+                {
+                    idsList = idsList.Concat(item.ReferencedItemIds).ToList();
+                }
+            }
 
-            var finalList = itemsHavingReferences.OrderBy(x => x.ItemName).Concat(remainingItems);
+            var parentList = new List<ContentModel>();
+
+            if (idsList.Any())
+            {
+                foreach (var currentItem in content)
+                {
+                    if (!idsList.Contains(currentItem.ItemId))
+                    {
+                        parentList.Add(currentItem);
+                    }
+                }
+            }
+            else
+            {
+                parentList = content;
+            }
+
+            //var itemsHavingReferences = content.Where(i => i.ReferencedItemIds.Count > 0);
+            var remainingItems = content.Except(parentList);
+
+            var finalList = parentList.OrderBy(x => x.ItemName).Concat(remainingItems);
             return Json(finalList, JsonRequestBehavior.AllowGet);
         }
 

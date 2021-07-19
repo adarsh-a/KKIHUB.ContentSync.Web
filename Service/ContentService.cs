@@ -21,7 +21,36 @@ namespace KKIHUB.ContentSync.Web.Service
 			try
 			{
 				var artifacts = await acousticService.FetchArtifactForDateRangeAsync(syncId, startDate, endDate, hubId, recursive, onlyUpdated);
+				List<Task> taskList = new List<Task>();
 
+				foreach (var artifact in artifacts)
+				{
+					var task = this.acousticService.FetchContentByIdAsync(artifact.ItemId, targethub);
+					taskList.Add(task);
+				}
+				await Task.WhenAll(taskList);
+
+				var targetHubItems = new List<ContentModel>();
+
+				foreach (Task<ContentModel> task in taskList)
+				{
+					if (task.Result != null)
+					{
+						targetHubItems.Add(task.Result);
+
+					}
+				}
+				foreach (var artifact in artifacts)
+				{
+					var targetItem = targetHubItems.FirstOrDefault(x => x.ItemId == artifact.ItemId);
+					if (targetItem == null)
+					{
+						continue;
+					}
+					artifact.TargetHubItemName = targetItem.ItemName;
+					artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
+				}
+				/*
 				foreach (var artifact in artifacts)
 				{
 					var targetItem = await acousticService.FetchContentByIdAsync(artifact.ItemId, targethub);
@@ -30,9 +59,9 @@ namespace KKIHUB.ContentSync.Web.Service
 						continue;
 					}
 					artifact.TargetHubItemName = targetItem.ItemName;
-                    artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
+					artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
 
-                }
+				}*/
 				return artifacts;
 			}
 			catch (Exception ex)
@@ -42,6 +71,7 @@ namespace KKIHUB.ContentSync.Web.Service
 			}
 
 		}
+
 		/// <summary>
 		/// fetches content async
 		/// </summary>
@@ -115,7 +145,36 @@ namespace KKIHUB.ContentSync.Web.Service
 			{
 				var artifacts = await acousticService.FetchArtifactForDateRangeAsync(syncId, startdate, enddate, hub, true, true, libraryId);
 
+				List<Task> taskList = new List<Task>();
+
 				foreach (var artifact in artifacts)
+				{
+					var task = this.acousticService.FetchContentByIdAsync(artifact.ItemId, targethub);
+					taskList.Add(task);
+				}
+				await Task.WhenAll(taskList);
+
+				var targetHubItems = new List<ContentModel>();
+
+				foreach (Task<ContentModel> task in taskList)
+				{
+					if (task.Result != null)
+					{
+						targetHubItems.Add(task.Result);
+
+					}
+				}
+				foreach (var artifact in artifacts)
+				{
+					var targetItem = targetHubItems.FirstOrDefault(x => x.ItemId == artifact.ItemId);
+					if (targetItem == null)
+					{
+						continue;
+					}
+					artifact.TargetHubItemName = targetItem.ItemName;
+					artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
+				}
+				/*foreach (var artifact in artifacts)
 				{
 					var targetItem = await acousticService.FetchContentByIdAsync(artifact.ItemId, targethub);
 					if (targetItem == null)
@@ -123,9 +182,9 @@ namespace KKIHUB.ContentSync.Web.Service
 						continue;
 					}
 					artifact.TargetHubItemName = targetItem.ItemName;
-                    artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
+					artifact.TargetHubModifiedDate = DateTime.Parse(targetItem.ModifiedDate).ToString();
 
-                }
+				}*/
 				return artifacts;
 			}
 			catch (Exception ex)

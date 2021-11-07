@@ -136,9 +136,51 @@ d-flex {
 .field {
     text-align: left;
     width: 50%;
-    padding-left:50px;
+    padding-left: 50px;
+    margin-top:5px;
 }
 
 .label-chk {
     margin-right: 5px;
+}
+
+tr {
+    text-align: left;
+}
+
+.inner-child-1 {
+    padding-left: 15px !important;
+}
+
+.inner-child-2 {
+    padding-left: 30px !important;
+}
+
+.inner-child-3 {
+    padding-left: 45px !important;
+}
+
+.inner-child-4 {
+    padding-left: 60px !important;
+}
+
+
+.btnDiv {
+    margin-top: 10px;
+    margin-left: 78px;
+}
+
+.field-source-hub, .field-target-hub {
+    margin-left:10px;
+}
+.field-library {
+    margin-left: 30px;
+}
+
+#date-from {
+    margin-left: 40px;
+}
+
+#date-to {
+    margin-left: 58px;
 }
